@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { v4 as uuid } from 'uuid';
 
 import { CreateCarDto, UpdateCarDto } from './dto';
@@ -6,77 +6,66 @@ import { Car } from './interfaces/car.interface';
 
 @Injectable()
 export class CarsService {
+  private cars: Car[] = [
+    {
+      id: uuid(),
+      brand: 'Toyota',
+      model: 'Corolla',
+    },
+    {
+      id: uuid(),
+      brand: 'Audi',
+      model: 'A3',
+    },
+    {
+      id: uuid(),
+      brand: 'Honda',
+      model: 'Civic',
+    },
+  ];
 
-    private cars: Car[] = [
-        {
-            id: uuid(),
-            brand: 'Toyota',
-            model: 'Corolla',
-        },
-        {
-            id: uuid(),
-            brand: 'Audi',
-            model: 'A3',
-        },
-        {
-            id: uuid(),
-            brand: 'Honda',
-            model: 'Civic',
-        },
-    ];
+  findAll() {
+    return this.cars;
+  }
 
-    findAll() {
-        return this.cars;
+  findOneById(id: string) {
+    const car = this.cars.find((car) => car.id === id);
+
+    if (!car) throw new NotFoundException(`Car with ID: ${id} is not found`);
+
+    return car;
+  }
+
+  create(createCarDto: CreateCarDto) {
+    const car: Car = {
+      id: uuid(),
+      ...createCarDto,
     };
 
-    findOneById( id: string ) {
+    this.cars.push(car);
 
-        const car = this.cars.find( car => car.id === id );
+    return car;
+  }
 
-        if( !car ) throw new NotFoundException(`Car with ID: ${ id } is not found`);
+  update(updateCarDto: UpdateCarDto, id: string) {
+    const car = this.findOneById(id);
+
+    // if( updateCarDto.id && updateCarDto.id !== id ) throw new BadRequestException('Car id is not valid inside body');
+
+    this.cars = this.cars.map((car) => {
+      if (car.id === id) {
+        car = { ...car, ...updateCarDto, id };
 
         return car;
-        
-    };
+      }
+    });
 
-    create( createCarDto: CreateCarDto ) {
+    return car;
+  }
 
-        const car: Car = {
-            id: uuid(),
-            ...createCarDto,
-        };
+  delete(id: string) {
+    // const car = this.findOneById(id);
 
-        this.cars.push( car );
-
-        return car;
-    };
-
-    update( updateCarDto: UpdateCarDto, id: string ) {
-
-        let car = this.findOneById( id );
-
-        // if( updateCarDto.id && updateCarDto.id !== id ) throw new BadRequestException('Car id is not valid inside body');
-
-        this.cars = this.cars.map( car => {
-        
-            if( car.id === id ) {
-
-                car = { ...car, ...updateCarDto, id }
-
-                return car;
-            }
-
-        })
-
-        return car;
-    };
-    
-    delete( id: string ) {
-
-        const car = this.findOneById( id );
-
-        this.cars = this.cars.filter( car => car.id !== id );
-        
-    }
-
-};
+    this.cars = this.cars.filter((car) => car.id !== id);
+  }
+}
